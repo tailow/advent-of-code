@@ -6,7 +6,7 @@ pub fn run() {
     solve(input);
 }
 
-pub fn solve(input: String) {
+fn solve(input: String) {
     let location_ids: Vec<i32> = input
         .split_whitespace()
         .map(|id| id.parse::<i32>().expect("Couldn't parse id."))

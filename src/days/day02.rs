@@ -6,7 +6,7 @@ pub fn run() {
     solve(input);
 }
 
-pub fn solve(input: String) {
+fn solve(input: String) {
     let mut reports: Vec<Vec<i32>> = Vec::new();
 
     let input_rows = input.split("\n");

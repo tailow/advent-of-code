@@ -7,7 +7,7 @@ pub fn run() {
     solve(input);
 }
 
-pub fn solve(input: String) {
+fn solve(input: String) {
     let mul_regex = Regex::new(r"^mul\((?<f>[0-9]+),(?<s>[0-9]+)\)").unwrap();
     let do_regex = Regex::new(r"^do\(\)").unwrap();
     let dont_regex = Regex::new(r"^don't\(\)").unwrap();
