@@ -1,10 +1,15 @@
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, fs, thread::current};
 
 #[derive(Debug, Clone)]
 struct Region {
     character: char,
     plots: Vec<(u32, u32)>,
     perimeter: u32,
+    edges: Vec<Vec<(u32, u32)>>,
+    up_edge_plots: Vec<(u32, u32)>,
+    down_edge_plots: Vec<(u32, u32)>,
+    left_edge_plots: Vec<(u32, u32)>,
+    right_edge_plots: Vec<(u32, u32)>,
 }
 
 pub fn run() {
@@ -23,14 +28,28 @@ fn solve(input: &String) {
     let regions: HashMap<char, Vec<Region>> = find_regions(&plots);
 
     let mut total_price: u32 = 0;
+    let mut total_edge_plots: u32 = 0;
+    let mut total_edges: u32 = 0;
 
     for region_type in regions {
-        for region in region_type.1 {
-            total_price += region.perimeter * region.plots.len() as u32;
+        for mut region in region_type.1 {
+            total_edge_plots += region.down_edge_plots.len() as u32;
+            total_edge_plots += region.up_edge_plots.len() as u32;
+            total_edge_plots += region.left_edge_plots.len() as u32;
+            total_edge_plots += region.right_edge_plots.len() as u32;
+
+            find_edges(&mut region);
+
+            total_edges += region.edges.len() as u32;
+
+            total_price += region.edges.len() as u32 * region.plots.len() as u32;
         }
     }
 
-    println!("Total fence price: {}", total_price);
+    println!(
+        "Total fence price: {}\nTotal edge plots: {}\nTotal edges: {}",
+        total_price, total_edge_plots, total_edges
+    );
 }
 
 fn find_regions(plots: &Vec<Vec<char>>) -> HashMap<char, Vec<Region>> {
@@ -81,6 +100,11 @@ fn find_region(start: (u32, u32), plots: &Vec<Vec<char>>) -> (Region, Vec<(u32, 
         character: region_character,
         plots: Vec::new(),
         perimeter: 0,
+        edges: Vec::new(),
+        up_edge_plots: Vec::new(),
+        down_edge_plots: Vec::new(),
+        left_edge_plots: Vec::new(),
+        right_edge_plots: Vec::new(),
     };
 
     let mut neighboring_region_plots: Vec<(u32, u32)> = Vec::new();
@@ -109,9 +133,13 @@ fn recursive_find_region_plots(
         } else {
             neighboring_region_plots.push(left);
 
+            region.left_edge_plots.push(plot);
+
             region.perimeter += 1;
         }
     } else {
+        region.left_edge_plots.push(plot);
+
         region.perimeter += 1;
     }
 
@@ -126,9 +154,13 @@ fn recursive_find_region_plots(
         } else {
             neighboring_region_plots.push(right);
 
+            region.right_edge_plots.push(plot);
+
             region.perimeter += 1;
         }
     } else {
+        region.right_edge_plots.push(plot);
+
         region.perimeter += 1;
     }
 
@@ -143,9 +175,13 @@ fn recursive_find_region_plots(
         } else {
             neighboring_region_plots.push(up);
 
+            region.up_edge_plots.push(plot);
+
             region.perimeter += 1;
         }
     } else {
+        region.up_edge_plots.push(plot);
+
         region.perimeter += 1;
     }
 
@@ -160,9 +196,155 @@ fn recursive_find_region_plots(
         } else {
             neighboring_region_plots.push(down);
 
+            region.down_edge_plots.push(plot);
+
             region.perimeter += 1;
         }
     } else {
+        region.down_edge_plots.push(plot);
+
         region.perimeter += 1;
+    }
+}
+
+fn find_edges(region: &mut Region) {
+    while region.up_edge_plots.len() > 0 {
+        let mut current_edge: Vec<(u32, u32)> = Vec::new();
+
+        current_edge.push(region.up_edge_plots[0]);
+
+        region.up_edge_plots.remove(0);
+
+        let mut index = 0;
+
+        while index < region.up_edge_plots.len() {
+            let mut is_in_edge: bool = false;
+
+            for edge in &current_edge {
+                if (region.up_edge_plots[index].1 == edge.1)
+                    & ((region.up_edge_plots[index].0 == edge.0 - 1)
+                        || (region.up_edge_plots[index].0 == edge.0 + 1))
+                {
+                    is_in_edge = true;
+
+                    break;
+                }
+            }
+
+            if is_in_edge {
+                current_edge.push(region.up_edge_plots.remove(index));
+
+                index = 0;
+            } else {
+                index += 1;
+            }
+        }
+
+        region.edges.push(current_edge);
+    }
+
+    while region.down_edge_plots.len() > 0 {
+        let mut current_edge: Vec<(u32, u32)> = Vec::new();
+
+        current_edge.push(region.down_edge_plots[0]);
+
+        region.down_edge_plots.remove(0);
+
+        let mut index = 0;
+
+        while index < region.down_edge_plots.len() {
+            let mut is_in_edge: bool = false;
+
+            for edge in &current_edge {
+                if (region.down_edge_plots[index].1 == edge.1)
+                    & ((region.down_edge_plots[index].0 == edge.0 - 1)
+                        || (region.down_edge_plots[index].0 == edge.0 + 1))
+                {
+                    is_in_edge = true;
+
+                    break;
+                }
+            }
+
+            if is_in_edge {
+                current_edge.push(region.down_edge_plots.remove(index));
+
+                index = 0;
+            } else {
+                index += 1;
+            }
+        }
+
+        region.edges.push(current_edge);
+    }
+
+    while region.right_edge_plots.len() > 0 {
+        let mut current_edge: Vec<(u32, u32)> = Vec::new();
+
+        current_edge.push(region.right_edge_plots[0]);
+
+        region.right_edge_plots.remove(0);
+
+        let mut index = 0;
+
+        while index < region.right_edge_plots.len() {
+            let mut is_in_edge: bool = false;
+
+            for edge in &current_edge {
+                if (region.right_edge_plots[index].0 == edge.0)
+                    & ((region.right_edge_plots[index].1 == edge.1 - 1)
+                        || (region.right_edge_plots[index].1 == edge.1 + 1))
+                {
+                    is_in_edge = true;
+
+                    break;
+                }
+            }
+
+            if is_in_edge {
+                current_edge.push(region.right_edge_plots.remove(index));
+
+                index = 0;
+            } else {
+                index += 1;
+            }
+        }
+
+        region.edges.push(current_edge);
+    }
+
+    while region.left_edge_plots.len() > 0 {
+        let mut current_edge: Vec<(u32, u32)> = Vec::new();
+
+        current_edge.push(region.left_edge_plots[0]);
+
+        region.left_edge_plots.remove(0);
+
+        let mut index = 0;
+
+        while index < region.left_edge_plots.len() {
+            let mut is_in_edge: bool = false;
+
+            for edge in &current_edge {
+                if (region.left_edge_plots[index].0 == edge.0)
+                    & ((region.left_edge_plots[index].1 == edge.1 - 1)
+                        || (region.left_edge_plots[index].1 == edge.1 + 1))
+                {
+                    is_in_edge = true;
+
+                    break;
+                }
+            }
+
+            if is_in_edge {
+                current_edge.push(region.left_edge_plots.remove(index));
+
+                index = 0;
+            } else {
+                index += 1;
+            }
+        }
+
+        region.edges.push(current_edge);
     }
 }
