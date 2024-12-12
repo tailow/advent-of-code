@@ -5,11 +5,11 @@ mod days;
 fn main() {
     let start = SystemTime::now();
 
-    days::day11::run();
+    days::day12::run();
 
     match start.elapsed() {
         Ok(elapsed) => {
-            println!("Time elapsed: {} ms", elapsed.as_millis());
+            println!("Time elapsed: {} µs", elapsed.as_micros());
         }
         _ => {}
     }
