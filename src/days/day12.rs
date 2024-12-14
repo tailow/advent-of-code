@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, thread::current};
+use std::{collections::HashMap, fs};
 
 #[derive(Debug, Clone)]
 struct Region {

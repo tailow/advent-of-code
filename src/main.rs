@@ -5,7 +5,7 @@ mod days;
 fn main() {
     let start = SystemTime::now();
 
-    days::day12::run();
+    days::day13::run();
 
     match start.elapsed() {
         Ok(elapsed) => {
